@@ -17,7 +17,7 @@ namespace WinZoPNG
 
     /// <summary>
     /// Nullable. What to do on each thead(s).
-    /// Set value during running. after finish all thread(s), re-set null to this var.
+    /// Set value during runn1ing. after finish all thread(s), re-set null to this var.
     /// </summary>
     protected Action? runningAction;
 
@@ -48,7 +48,7 @@ namespace WinZoPNG
 
     /// <summary>
     /// Number of simultaneous threads. must be greater equal than <seealso cref="MIN_PARALLELS"/>.<br />
-    /// Add thread(s) when set greater than current running threads (see:<see cref="GetRunnningThreadCount"/>).
+    /// Add thread(s) when set greater than current running threads (see:<see cref="GetRunningThreadCount"/>).
     /// </summary>
     public int Parallels
     {
@@ -126,7 +126,7 @@ namespace WinZoPNG
         Task task = new(ActionWrapper);
         if (tasks.ContainsKey(task.Id) || !tasks.TryAdd(task.Id, task))
         {
-          // taskid dupulicated (MS said it's rare-case), try add an another thread.
+          // task-id duplicated (MS said it's rare-case), try add an another thread.
           task.Dispose();
           AddThread();
           return;
@@ -158,7 +158,7 @@ namespace WinZoPNG
     /// <exception cref="InvalidOperationException">Raises if already running.</exception>
     public void Run(Action _action)
     {
-      int cnt = GetRunnningThreadCount();
+      int cnt = GetRunningThreadCount();
       if (0 < cnt || runningAction is not null)
       {
         _ = new InvalidOperationException("Tried Run() in spite of there'is still runnning Thread(s)");
@@ -175,7 +175,7 @@ namespace WinZoPNG
     /// Confirm threads' status and returns how many runnnig thread(s).
     /// </summary>
     /// <returns>Number of running task(s).</returns>
-    public int GetRunnningThreadCount()
+    public int GetRunningThreadCount()
     {
       IEnumerator<KeyValuePair<int, Task>> enumerator = tasks.GetEnumerator();
       while (enumerator.MoveNext())
@@ -204,7 +204,7 @@ namespace WinZoPNG
     /// <returns><see langword="true"/>returns when there're too many worker threads. <see langword="false"/> other wise.</returns>
     public bool ShouldIExitThread()
     {
-      return parallels < GetRunnningThreadCount();
+      return parallels < GetRunningThreadCount();
     }
   }
 }

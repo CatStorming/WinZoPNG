@@ -407,7 +407,7 @@ namespace WinZoPNG
       }
 
       int cntAll = lmgr.Count;
-      int cntRun = workerManager?.GetRunnningThreadCount() ?? 0;
+      int cntRun = workerManager?.GetRunningThreadCount() ?? 0;
       int cntFin = _cntOptAlready + _cntFail + _cntSuccess;
       int cntErr = _cntFail;
       int cntWat = cntAll - cntRun - cntFin - cntErr;

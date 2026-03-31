@@ -179,4 +179,12 @@ WinZoPNG made by CatStorming, MIT License
  * コマンドラインサポート
  * MVC 分離のリファクタリング
 
+
+## 更新履歴
+
+v1.0.1 - 細かい修正
+
+v1.0.0 - 初公開
+
+
 [EOF]

@@ -16,25 +16,22 @@ namespace WinZoPNG
     /// <param name="evType"></param>
     public delegate void ListManagerEvent(ListManager mgr);
 
-    protected List<ListViewItem> list = [];
-    public ListViewItem this[int index] => list.ElementAt(index);
-    public ListViewItem Get(int index) => list.ElementAt(index);
+    protected List<ListViewItem> innerList = [];
+    public ListViewItem this[int index] => innerList[index];
 
     protected ListView _lvTarget = TargetListView;
-    public ListView ListViewTarget { get => _lvTarget; }
+    public ListView ListViewTarget => _lvTarget;
 
-    public int Count { get { return list.Count; } }
+    public int Count => innerList.Count;
 
     public event ListManagerEvent? OnChangeCount;
 
     protected const int MinSubItemsCount = 5;
 
-    public IEnumerator<ListViewItem> GetEnumerator() { return list.GetEnumerator(); }
-
     /// <summary>
     /// Run an event handler that specified.
     /// </summary>
-    /// <param name="targets">EventHandler list</param>
+    /// <param name="targets">EventHandler innerList</param>
     /// <param name="eType">type of event</param>
     protected void TriggerEvent(List<ListManagerEvent> targets)
     {
@@ -45,7 +42,7 @@ namespace WinZoPNG
     }
 
     /// <summary>
-    /// Add a ListViewItem to list
+    /// Add a ListViewItem to innerList
     /// </summary>
     /// <param name="item">item to add</param>
     public void Add(ListViewItem item)
@@ -54,18 +51,18 @@ namespace WinZoPNG
       {
         item.SubItems.Add("");
       }
-      list.Add(item);
+      innerList.Add(item);
       OnChangeCount?.Invoke(this);
     }
 
     /// <summary>
     /// Synonym of Remove
     /// </summary>
-    /// <param name="index">index to remove from list.</param>
+    /// <param name="index">index to remove from innerList.</param>
     /// <see cref="Remove(int)"/>
     public void RemoveAt(int index)
     {
-      list.RemoveAt(index);
+      innerList.RemoveAt(index);
       OnChangeCount?.Invoke(this);
     }
 
@@ -73,14 +70,18 @@ namespace WinZoPNG
     /// Batch remove by array of indexies.
     /// </summary>
     /// <param name="Indices"></param>
-    public void Removes(int[] Indices)
+    public void Removes(int[] indices)
     {
-      Array.Sort(Indices);
-      for (int i = Indices.Length - 1; i >= 0; i--)
+      if (indices.Length == 0) return;
+      HashSet<int> removeSet = [.. indices];
+      List<ListViewItem> newList = new(innerList.Count - indices.Length);
+      for (int i = 0; i < innerList.Count; i++)
       {
-        list.RemoveAt(Indices[i]);
+        if (!removeSet.Contains(i))
+          newList.Add(innerList[i]);
       }
-      _lvTarget.VirtualListSize = list.Count;
+      innerList = newList;
+      _lvTarget.VirtualListSize = innerList.Count;
       OnChangeCount?.Invoke(this);
     }
 
@@ -95,36 +96,13 @@ namespace WinZoPNG
     public int GetCountByText(int index, string text)
     {
       if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), "does not allow under 0 index value.");
-      int cnt = list.Count(item =>
+      int cnt = innerList.Count(item =>
       {
         if (item.SubItems.Count <= index) return false;
         string t = item.SubItems[index].Text;
         return t.Equals(text) || t.StartsWith(text);
       });
       return cnt;
-    }
-
-    /// <returns>Total Compression Rate calced by: <code>(TotalBeforeBytes - TotalAfterBytes) / TotalBeforeBytes}</code></returns>
-    public double GetTotalCompressedRate(int indexBefore, int indexAfter)
-    {
-      long totalBefore = 0;
-      long totalAfter = 0;
-      for(int i=0, j = this.Count; i<j; i++)
-      {
-        try
-        {
-          ListViewItem item = this[i];
-          long b = long.Parse("0" + item.SubItems[indexBefore].Text);
-          long a = long.Parse("0" + item.SubItems[indexAfter].Text);
-          if (0 == a || 0 == b) continue;
-          totalBefore += b;
-          totalAfter += a;
-        } catch (Exception)
-        {
-        }
-      }
-      if (0 == totalBefore) return 0;
-      return (totalBefore - totalAfter) * 1.0 / totalBefore;
     }
 
     /// <summary>
@@ -135,7 +113,7 @@ namespace WinZoPNG
     public bool HasInText(string text)
     {
       string lowText = text.ToLower();
-      foreach(ListViewItem item in list)
+      foreach(ListViewItem item in innerList)
       {
         if (item.Text.ToLower().Equals(lowText, StringComparison.Ordinal)) return true;
       }
@@ -148,7 +126,7 @@ namespace WinZoPNG
       ListViewTarget.BeginUpdate();
       try
       {
-        int cnt = list.Count;
+        int cnt = innerList.Count;
         for (int i=0; i<cnt; i++)
         {
           ListViewItem item = this[i];
@@ -163,7 +141,7 @@ namespace WinZoPNG
     }
 
     /// <summary>
-    /// make/return ListViewItem.text list seprarated by line-break from Selected ListViewItems to copy filenames function.
+    /// make/return ListViewItem.text innerList separated by line-break from Selected ListViewItems to copy filenames function.
     /// </summary>
     /// <returns>Line separated string.</returns>
     public string GetCopyText()
@@ -174,15 +152,15 @@ namespace WinZoPNG
       {
         for (int i = 0, j = sels.Count; i < j; i++)
         {
-          ListViewItem item = list[sels[i]];
+          ListViewItem item = innerList[sels[i]];
           _ = sb.Append(item.Text).AppendLine();
         }
       }
       else
       {
-        for (int i = 0, j = list.Count; i < j; i++)
+        for (int i = 0, j = innerList.Count; i < j; i++)
         {
-          ListViewItem item = list[i];
+          ListViewItem item = innerList[i];
           _ = sb.Append(item.Text).AppendLine();
         }
       }
@@ -190,7 +168,7 @@ namespace WinZoPNG
     }
 
 
-    protected static void AddCopyHeaders(StringBuilder sb, ListView _lvTarget, Char separator)
+    protected static void AddCopyHeaders(StringBuilder sb, ListView _lvTarget, char separator)
     {
       // Add header
       for (int i = 0, j = _lvTarget.Columns.Count; i < j; i++)
@@ -204,11 +182,11 @@ namespace WinZoPNG
     /// <summary>
     /// make/return table string such as TSV(Tab Separated Values) from Selected ListViewItems to copy all function.
     /// </summary>
-    /// <param name="separator">Char to separate column. becareful: this function does not escape strings in ListViewSubText even if use ',' as separator.</param>
-    /// <returns>empty string: no items in list.</returns>
-    public string GetCopyFullText(Char separator = '\t')
+    /// <param name="separator">Char to separate column. be careful: this function does not escape strings in ListViewSubText even if use ',' as separator.</param>
+    /// <returns>empty string: no items in innerList.</returns>
+    public string GetCopyFullText(char separator = '\t')
     {
-      int cnt = list.Count;
+      int cnt = innerList.Count;
       if (0 == cnt) return "";
 
       StringBuilder sb = new(((cnt * 386 / 4096) + 1) * 4096); // acquire buffer by item count, rough calc
@@ -254,7 +232,7 @@ namespace WinZoPNG
       _lvTarget.BeginUpdate();
       try
       {
-        list.Sort(comparer);
+        innerList.Sort(comparer);
         _lvTarget.Update();
         _lvTarget.Refresh();
       } finally {
@@ -275,8 +253,8 @@ namespace WinZoPNG
     public void InitQueue(int statusColIndex)
     {
       _queue?.Dispose();
-      _queue = new BlockingCollection<ListViewItem>(list.Count);
-      for(int i = 0, j = list.Count; i < j; i++)
+      _queue = new BlockingCollection<ListViewItem>(innerList.Count);
+      for(int i = 0, j = innerList.Count; i < j; i++)
       {
         ListViewItem item = this[i];
         if (0 == item.SubItems[statusColIndex].Text.Length) _queue.Add(item);
@@ -286,6 +264,7 @@ namespace WinZoPNG
 
     /// <summary>
     /// Pop a ListViewItem from queue. to use, call InitQueue first.
+    /// text, colors are set to status column.
     /// </summary>
     /// <param name="columnIndex">index of status column header</param>
     /// <param name="textToSet">Status Text, eg: running...</param>

@@ -1,6 +1,6 @@
 ﻿For Japanese users, see readme.ja.md
 
-日本語版は readme.ja.md をご参照ください。
+[日本語版は readme.ja.md](readme.ja.md) をご参照ください。
 
 -----------
 
@@ -175,5 +175,13 @@ No fixed timeline.
  * multilingual support
  * command line support
  * Refactoring codes, MVC separation
+
+
+## Change Log
+
+v1.0.1 - minor update
+ * various minor changes such as typo, small bugfix
+
+v1.0.0 - first release
 
 [EOF]
